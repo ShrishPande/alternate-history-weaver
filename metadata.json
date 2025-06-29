@@ -1,0 +1,5 @@
+{
+  "name": "Alternate History Weaver",
+  "description": "An interactive storytelling app where you shape history. Select a starting year and event, then make choices at critical turning points to weave your own unique timeline, powered by the Gemini API.",
+  "requestFramePermissions": []
+}
