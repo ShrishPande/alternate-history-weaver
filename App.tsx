@@ -2,6 +2,7 @@
 import React, { useState, useCallback, FormEvent } from 'react';
 import { GameState, HistoryEntry } from './types';
 import * as geminiService from './services/geminiService';
+import { downloadTimelineAsPDF } from './services/downloadService';
 import Spinner from './components/Spinner';
 import ChoiceButton from './components/ChoiceButton';
 
@@ -138,6 +139,10 @@ const App: React.FC = () => {
     }
 }, [historyLog]);
 
+  const handleDownload = () => {
+    downloadTimelineAsPDF(historyLog);
+  };
+
   const renderContent = () => {
     if (isLoading && gameState !== GameState.IN_GAME) {
       return (
@@ -237,9 +242,14 @@ const App: React.FC = () => {
                     <div className="text-center p-6 bg-gray-700/50 rounded-lg">
                         <h3 className="text-3xl font-bold text-cyan-300">The End of the Line</h3>
                         <p className="text-gray-300 mt-2">Your timeline has reached its conclusion.</p>
-                        <button onClick={handleReset} className="mt-6 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                            Weave a New History
-                        </button>
+                        <div className="flex gap-4 justify-center">
+                            <button onClick={handleReset} className="mt-6 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                Weave a New History
+                            </button>
+                            <button onClick={handleDownload} className="mt-6 bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                Download as PDF
+                            </button>
+                        </div>
                     </div>
                 )}
                 
@@ -253,6 +263,14 @@ const App: React.FC = () => {
                                 </ChoiceButton>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {(gameState === GameState.IN_GAME || gameState === GameState.GAME_OVER) && (
+                    <div className="text-center mt-8">
+                        <button onClick={handleDownload} className="bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            Download as PDF
+                        </button>
                     </div>
                 )}
             </div>

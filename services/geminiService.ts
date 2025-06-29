@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, GenerateContentRequest } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
 
@@ -35,10 +35,24 @@ const parseJsonResponse = <T,>(text: string): T => {
     }
     try {
       return JSON.parse(jsonStr) as T;
-    }
-    catch (e) {
+    } catch (e) {
       console.error("Failed to parse JSON response:", jsonStr);
       throw new Error("The AI returned an invalid response format. Please try again.");
+    }
+};
+
+const callGeminiApi = async <T,>(request: GenerateContentRequest): Promise<T> => {
+    try {
+        const response = await ai.models.generateContent(request);
+        return parseJsonResponse<T>(response.text);
+    } catch (e) {
+        if (e instanceof Error && (e.message.includes('503') || e.message.includes('UNAVAILABLE'))) {
+            throw new Error("The AI model is currently overloaded. Please try again in a few moments.");
+        }
+        if (e instanceof Error) {
+            throw new Error(`An API error occurred: ${e.message}`);
+        }
+        throw new Error("An unknown error occurred while contacting the AI.");
     }
 };
 
@@ -58,7 +72,7 @@ export const getInitialEvents = async (year: number): Promise<string[]> => {
     const yearString = year < 0 ? `${-year} BC` : `${year} AD`;
     const prompt = `List 3-5 major historical turning points or significant global events that occurred in the year ${yearString}. Respond with only a JSON array of strings. Example: ["The first telephone was patented.", "The Battle of Little Bighorn took place.", "Colorado was admitted as the 38th U.S. state."]`;
     
-    const response = await ai.models.generateContent({
+    return callGeminiApi<string[]> ({
         model: 'gemini-2.5-flash-preview-04-17',
         contents: prompt,
         config: {
@@ -66,15 +80,13 @@ export const getInitialEvents = async (year: number): Promise<string[]> => {
             temperature: 0.5,
         }
     });
-
-    return parseJsonResponse<string[]>(response.text);
 };
 
 
 export const startGame = async (initialEvent: string, year: number): Promise<GameContinuation> => {
     const prompt = `Start a new alternate history timeline beginning in the year ${year} with this event: "${initialEvent}". Provide the initial narrative, the year of the narrative, 2-3 auto-generated subsequent minor events, and the first set of choices.`;
 
-    const response = await ai.models.generateContent({
+    return callGeminiApi<GameContinuation>({
         model: 'gemini-2.5-flash-preview-04-17',
         contents: prompt,
         config: {
@@ -83,16 +95,14 @@ export const startGame = async (initialEvent: string, year: number): Promise<Gam
             temperature: 0.8,
         }
     });
-
-    return parseJsonResponse<GameContinuation>(response.text);
 };
 
 
 export const advanceTimeline = async (history: string, choice: string, lastYear: number): Promise<GameContinuation> => {
     const prompt = `The current history so far is: "${history}". The last major event occurred in ${lastYear}. The user has just made the following choice: "${choice}". Continue the narrative based on this choice, provide the year it occurs, 2-3 minor follow-up events in the subsequent years, and the next set of decisions.`;
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-04-17',
+    return callGeminiApi<GameContinuation>({
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             systemInstruction: SYSTEM_INSTRUCTION,
@@ -100,6 +110,4 @@ export const advanceTimeline = async (history: string, choice: string, lastYear:
             temperature: 0.8,
         }
     });
-
-    return parseJsonResponse<GameContinuation>(response.text);
 };
