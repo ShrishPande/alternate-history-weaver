@@ -73,7 +73,7 @@ export const getInitialEvents = async (year: number): Promise<string[]> => {
     const prompt = `List 3-5 major historical turning points or significant global events that occurred in the year ${yearString}. Respond with only a JSON array of strings. Example: ["The first telephone was patented.", "The Battle of Little Bighorn took place.", "Colorado was admitted as the 38th U.S. state."]`;
     
     return callGeminiApi<string[]> ({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             responseMimeType: "application/json",
@@ -87,7 +87,7 @@ export const startGame = async (initialEvent: string, year: number): Promise<Gam
     const prompt = `Start a new alternate history timeline beginning in the year ${year} with this event: "${initialEvent}". Provide the initial narrative, the year of the narrative, 2-3 auto-generated subsequent minor events, and the first set of choices.`;
 
     return callGeminiApi<GameContinuation>({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             systemInstruction: SYSTEM_INSTRUCTION,
@@ -102,7 +102,7 @@ export const advanceTimeline = async (history: string, choice: string, lastYear:
     const prompt = `The current history so far is: "${history}". The last major event occurred in ${lastYear}. The user has just made the following choice: "${choice}". Continue the narrative based on this choice, provide the year it occurs, 2-3 minor follow-up events in the subsequent years, and the next set of decisions.`;
 
     return callGeminiApi<GameContinuation>({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             systemInstruction: SYSTEM_INSTRUCTION,
